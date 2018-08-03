@@ -1,7 +1,7 @@
 # zephyr-env.sh whick is sourced below requires bash
 SHELL = /bin/bash
 BOARD = hifive1
-SAMPLES = hello_world
+SAMPLES = hello_world addition
 
 
 define setup_env
@@ -12,17 +12,19 @@ define setup_env
 endef
 
 define build_sample
+PATH_$(1) = samples/$(1)/build
+
 .ONESHELL: build-$(1) 
 build-$(1):
 	$(call setup_env)
-	mkdir samples/$(1)/build/
-	cmake -DBOARD=$(BOARD) -Hsamples/$(1)/ -Bsamples/$(1)/build/
-	make -C samples/$(1)/build
+	mkdir $$(PATH_$(1))
+	cmake -DBOARD=$(BOARD) -H$$(PATH_$(1))/.. -B$$(PATH_$(1))
+	make -C $$(PATH_$(1))
 BUILD_SAMPLES += build-$(1)
 
 .ONESHELL: clean-$(1)
 clean-$(1):
-	@rm -rf samples/$(1)/build
+	@rm -rf $$(PATH_$(1))
 CLEAN_SAMPLES += clean-$(1)
 endef
 
