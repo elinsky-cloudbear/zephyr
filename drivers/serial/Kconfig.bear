@@ -1,0 +1,14 @@
+# Kconfig.bear - BEAR UART configuration option
+#
+# Copyright (c) 2017 Alexander Kozlov <alexander.kozlov@cloudbear.ru>
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+menuconfig UART_BEAR
+    bool "BEAR UART driver"
+    depends on SOC_RISCV32_BEAR
+    default n
+    select SERIAL_HAS_DRIVER
+    help
+    Enable the BEAR UART driver.

@@ -1,0 +1,43 @@
+if SOC_SERIES_RISCV32_BEAR
+
+config SOC_SERIES
+    string
+    default "bear"
+
+config SYS_CLOCK_TICKS_PER_SEC
+    int
+    default 100
+
+config SYS_CLOCK_HW_CYCLES_PER_SEC
+    int
+    default 1000000
+
+config RISCV_SOC_INTERRUPT_INIT
+    bool
+    default y
+
+config INCLUDE_RESET_VECTOR
+    bool
+    default y
+
+config NUM_IRQS
+    int
+    default 13  # IRQ #0..11 are reserved according to RISC-V priv spec, IRQ #12 - UART
+
+config RISCV_ROM_BASE_ADDR
+    hex
+    default 0x80000000
+
+config RISCV_ROM_SIZE
+    hex
+    default 0x1000
+
+config RISCV_RAM_BASE_ADDR
+    hex
+    default 0x80001000
+
+config RISCV_RAM_SIZE_KB
+    int
+    default 124
+
+endif # SOC_SERIES_RISCV32_BEAR

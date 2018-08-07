@@ -1,0 +1,11 @@
+identifier: board_bear
+name: CloudBEAR board_bear
+type: mcu
+arch: riscv32
+toolchain:
+  - zephyr
+ram: 16
+testing:
+  ignore_tags:
+    - net
+    - bluetooth
