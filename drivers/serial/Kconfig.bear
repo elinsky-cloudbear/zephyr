@@ -10,5 +10,6 @@ menuconfig UART_BEAR
     depends on SOC_RISCV32_BEAR
     default n
     select SERIAL_HAS_DRIVER
+    select SERIAL_SUPPORT_INTERRUPT
     help
-    Enable the BEAR UART driver.
+      Enable the BEAR UART driver.
