@@ -75,8 +75,6 @@ struct uart_bear_device_config
 #define DEV_UART(dev) \
     ((volatile struct uart_bear_regs_t * const)(DEV_CFG(dev))->base)
 
-static struct device DEVICE_NAME_GET(uart_bear);
-
 #ifdef CONFIG_UART_INTERRUPT_DRIVEN
 static void uart_bear_isr(void *arg)
 {
@@ -88,25 +86,6 @@ static void uart_bear_isr(void *arg)
 }
 #endif
 
-
-#ifdef CONFIG_UART_INTERRUPT_DRIVEN
-static void uart_bear_irq_cfg_func(void);
-#endif
-
-static const struct uart_bear_device_config uart_bear_dev_cfg = {
-    .base = BEAR_UART_BASE,
-    .sys_clk_freq_mhz = BEAR_PERIPH_CLK_FREQ_MHZ,
-    .baud_rate = BEAR_UART_BAUD_RATE,
-#ifdef CONFIG_UART_INTERRUPT_DRIVEN
-    .cfg_func     = uart_bear_irq_cfg_func
-#endif
-};
-
-static struct uart_bear_dev_data_t uart_bear_dev_data = {
-#ifdef CONFIG_UART_INTERRUPT_DRIVEN
-    .callback = NULL
-#endif
-};
 
 #ifdef CONFIG_UART_DRV_CMD
 
@@ -316,12 +295,14 @@ static int uart_bear_irq_tx_ready(struct device *dev)
  *
  * @return 1 if nothing remains to be transmitted, 0 otherwise
  */
+/*
 static int uart_bear_irq_tx_empty(struct device *dev)
 {
     volatile struct uart_bear_regs_t *uart = DEV_UART(dev);
 
     return !!(uart->status & UART_TX_EMPTY);
 }
+*/
 
 
 /**
@@ -439,21 +420,86 @@ static const struct uart_driver_api uart_bear_driver_api = {
 #endif
 };
 
-DEVICE_AND_API_INIT(uart_bear, CONFIG_UART_CONSOLE_ON_DEV_NAME,
-                    uart_bear_init, &uart_bear_dev_data,
-                    &uart_bear_dev_cfg,
+#ifdef CONFIG_UART_BEAR_PORT_0
+
+static struct uart_bear_dev_data_t uart_bear_dev_data_0 = {
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+    .callback = NULL
+#endif
+};
+
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+static void uart_bear_irq_cfg_func_0(void);
+#endif
+
+static const struct uart_bear_device_config uart_bear_dev_cfg_0 = {
+    .base = BEAR_UART_0_BASE,
+    .sys_clk_freq_mhz = BEAR_PERIPH_CLK_FREQ_MHZ,
+    .baud_rate = BEAR_UART_0_BAUD_RATE,
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+    .cfg_func     = uart_bear_irq_cfg_func_0
+#endif
+};
+
+DEVICE_AND_API_INIT(uart_bear_0, CONFIG_UART_CONSOLE_ON_DEV_NAME,
+                    uart_bear_init, &uart_bear_dev_data_0,
+                    &uart_bear_dev_cfg_0,
                     PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEVICE,
                     (void *)&uart_bear_driver_api);
 
 #ifdef CONFIG_UART_INTERRUPT_DRIVEN
-static void uart_bear_irq_cfg_func(void)
+static void uart_bear_irq_cfg_func_0(void)
 {
-    IRQ_CONNECT(BEAR_UART_IRQ,
-                BEAR_UART_IRQ_PRIORITY,
+    IRQ_CONNECT(BEAR_UART_0_IRQ,
+                BEAR_UART_0_IRQ_PRIORITY,
                 uart_bear_isr,
-                DEVICE_GET(uart_bear),
+                DEVICE_GET(uart_bear_0),
                 0);
 
-    irq_enable(BEAR_UART_IRQ);
+    irq_enable(BEAR_UART_0_IRQ);
 }
 #endif
+
+#endif /*CONFIG_UART_BEAR_PORT_0 */
+
+#ifdef CONFIG_UART_BEAR_PORT_1
+
+static struct uart_bear_dev_data_t uart_bear_dev_data_1 = {
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+    .callback = NULL
+#endif
+};
+
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+static void uart_bear_irq_cfg_func_1(void);
+#endif
+
+static const struct uart_bear_device_config uart_bear_dev_cfg_1 = {
+    .base = BEAR_UART_1_BASE,
+    .sys_clk_freq_mhz = BEAR_PERIPH_CLK_FREQ_MHZ,
+    .baud_rate = BEAR_UART_1_BAUD_RATE,
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+    .cfg_func     = uart_bear_irq_cfg_func_1
+#endif
+};
+
+DEVICE_AND_API_INIT(uart_bear_1, CONFIG_UART_BEAR_PORT_1_NAME,
+                    uart_bear_init, &uart_bear_dev_data_1,
+                    &uart_bear_dev_cfg_1,
+                    PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEVICE,
+                    (void *)&uart_bear_driver_api);
+
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+static void uart_bear_irq_cfg_func_1(void)
+{
+    IRQ_CONNECT(BEAR_UART_1_IRQ,
+                BEAR_UART_1_IRQ_PRIORITY,
+                uart_bear_isr,
+                DEVICE_GET(uart_bear_1),
+                0);
+
+    irq_enable(BEAR_UART_1_IRQ);
+}
+#endif
+
+#endif /*CONFIG_UART_BEAR_PORT_1 */

@@ -27,11 +27,13 @@
 static volatile bool data_transmitted;
 static volatile bool data_received;
 
-static const char *poll_data = "This is a POLL test.\n";
-static const char *fifo_data = "This is a FIFO test.\n";
+static const char *poll_data = "This is a POLL test.\r\n";
+static const char *fifo_data = "This is a FIFO test.\r\n";
 
 static volatile unsigned int char_sent;
 static volatile unsigned int char_recev;
+
+static volatile bool buf_size_out;
 
 static char recev_data[BUF_SIZE];
 
@@ -40,7 +42,7 @@ static void uart_fifo_callback(struct device *dev)
     uart_irq_update(dev);
 
     if (uart_irq_tx_ready(dev)) {
-        unsigned int data_size = strlen(fifo_data) + 1; // '\n' (+1)
+        unsigned int data_size = strlen(fifo_data);
         char_sent += uart_fifo_fill(dev, (uint8_t *)(fifo_data + char_sent), data_size - char_sent);
 
         if (char_sent >= data_size) {
@@ -51,13 +53,23 @@ static void uart_fifo_callback(struct device *dev)
 
 
     if (uart_irq_rx_ready(dev)) {
-        unsigned int read_num = uart_fifo_read(dev, (uint8_t *)(recev_data + char_recev), BUF_SIZE - char_recev);
+        unsigned int read_num = uart_fifo_read(dev, (uint8_t *)(recev_data + char_recev),
+                                               (BUF_SIZE - 2) - char_recev);  // \n\0 -> (BUF_SIZE - 2)
         if (read_num != 0) {
             char_recev += read_num;
+            buf_size_out = (char_recev >= (BUF_SIZE - 3));
 
-            if (recev_data[char_recev-1] == '\n') {
+            if (recev_data[char_recev - 1] == '\r' || buf_size_out) {
                 data_received = true;
                 uart_irq_rx_disable(dev);
+
+                if (buf_size_out) {
+                	char_recev = BUF_SIZE - 2;
+                	recev_data[char_recev - 1] = '\r';
+                }
+                
+                recev_data[char_recev] = '\n';
+                recev_data[char_recev + 1] = '\0';
             }
         }
     }
@@ -122,7 +134,8 @@ static bool test_poll_in(void)
 
         printk("%c", recvChar);
 
-        if (recvChar == '\n') {
+        if (recvChar == '\r') {
+            printk("\n");
             break;
         }
     }
@@ -150,14 +163,14 @@ static bool test_poll_out(void)
 
 void main(void)
 {
-    printk("Test(s) started\n");
+    printk("Test(s) started\r\n");
 
     test_poll_in();
     test_poll_out();
     test_fifo_fill();
     test_fifo_read();
 
-    printk("UART test(s): Done %s\n", CONFIG_ARCH);
+    printk("UART test(s): Done %s\r\n", CONFIG_ARCH);
 
 #ifdef __BEAR_SOC_H_ //Send MSI
     struct device *dev = device_get_binding(CONFIG_UART_CONSOLE_ON_DEV_NAME);

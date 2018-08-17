@@ -13,3 +13,37 @@ menuconfig UART_BEAR
     select SERIAL_SUPPORT_INTERRUPT
     help
       Enable the BEAR UART driver.
+
+# ---------- Port 0 ----------
+
+menuconfig UART_BEAR_PORT_0
+    bool "Enable BEAR Port 0"
+    depends on UART_BEAR
+    help
+      This tells the driver to configure the UART port at boot, depending on
+      the additional configure options below.
+
+config UART_BEAR_PORT_0_NAME
+    string "Port 0 Device Name"
+    default "uart0"
+    depends on UART_BEAR_PORT_0
+    help
+      This is the device name for UART, and is included in the device
+      struct.
+
+# ---------- Port 1 ----------
+
+menuconfig UART_BEAR_PORT_1
+    bool "Enable BEAR Port 1"
+    depends on UART_BEAR
+    help
+      This tells the driver to configure the UART port at boot, depending on
+      the additional configure options below.
+
+config UART_BEAR_PORT_1_NAME
+    string "Port 1 Device Name"
+    default "uart1"
+    depends on UART_BEAR_PORT_1
+    help
+      This is the device name for UART, and is included in the device
+      struct.
