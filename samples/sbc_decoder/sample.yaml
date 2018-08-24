@@ -1,0 +1,12 @@
+sample:
+  description: SBC decoder test sample, the simplest Zephyr
+    application
+  name: SBC_DECODER test
+  platforms: all
+common:
+    tags: samples
+    harness: console
+    harness_config:
+      type: one_line
+      regex:
+        - "SBC_DECODER test (.*)"

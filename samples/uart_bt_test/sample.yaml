@@ -9,7 +9,7 @@ common:
     harness_config:
       type: one_line
       regex:
-        - "UART test (.*)"
+        - "UART_BT test (.*)"
 tests:
   sample.helloworld.singlethread:
     extra_args: CONF_FILE=prj_single.conf

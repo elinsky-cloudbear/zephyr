@@ -14,6 +14,7 @@
 
 #include <zephyr.h>
 #include <misc/printk.h>
+#include <logging/sys_log.h>
 #include <uart.h>
 
 #include <string.h>
@@ -81,7 +82,7 @@ static void uart_fifo_callback(struct device *dev)
 static bool test_fifo_fill(struct device *uart_dev, const char *output)
 {
     if (!uart_dev) {
-        printk("Cannot get UART device\r\n");
+        SYS_LOG_ERR("Cannot get UART device");
         return false;
     }
 
@@ -100,15 +101,12 @@ static bool test_fifo_fill(struct device *uart_dev, const char *output)
 }
 
 
-// call test_fifo_fill
-static bool test_fifo_read(struct device *uart_dev, const char *output)
+static bool test_fifo_read(struct device *uart_dev)
 {
     if (!uart_dev) {
-        printk("Cannot get UART device\r\n");
+        SYS_LOG_ERR("Cannot get UART device");
         return false;
     }
-
-    test_fifo_fill(uart_dev, output);
 
     char_recev = 0;
     memset(recev_data, '\0', sizeof(recev_data));
@@ -126,7 +124,7 @@ static bool test_fifo_read(struct device *uart_dev, const char *output)
 static bool test_poll_out(struct device *uart_dev, const char *output)
 {
     if (!uart_dev) {
-        printk("Cannot get UART device\r\n");
+        SYS_LOG_ERR("Cannot get UART device");
         return false;
     }
 
@@ -138,15 +136,12 @@ static bool test_poll_out(struct device *uart_dev, const char *output)
 }
 
 
-// call test_poll_out
-static bool test_poll_in(struct device *uart_dev, const char *output)
+static bool test_poll_in(struct device *uart_dev)
 {
     if (!uart_dev) {
-        printk("Cannot get UART device\r\n");
+        SYS_LOG_ERR("Cannot get UART device");
         return false;
     }
-
-    test_poll_out(uart_dev, output);
 
     unsigned char recvChar;
     char_recev = 0;
@@ -177,22 +172,28 @@ static bool test_poll_in(struct device *uart_dev, const char *output)
 void main(void)
 {
     //(*((volatile unsigned int *)(0x10015200))) = 1;
+    SYS_LOG_DBG("TEST STARTED");
+
     struct device *uart_dev_0 = device_get_binding(CONFIG_UART_CONSOLE_ON_DEV_NAME);
     struct device *uart_dev_1 = device_get_binding(CONFIG_UART_BEAR_PORT_1_NAME);
 
-    test_poll_in(uart_dev_0, "POLL. Send characters: console -> BT\r\n");
+    test_poll_out(uart_dev_0, "POLL. Send characters: console -> BT\r\n");
+    test_poll_in(uart_dev_0);
     test_poll_out(uart_dev_1, recev_data);
 
-    test_poll_in(uart_dev_1, "POLL. Send characters: BT -> console\r\n");
+    test_poll_out(uart_dev_1, "POLL. Send characters: BT -> console\r\n");
+    test_poll_in(uart_dev_1);
     test_poll_out(uart_dev_0, recev_data);
 
-    test_fifo_read(uart_dev_0, "FIFO. Send characters: console -> BT\r\n");
+    test_fifo_fill(uart_dev_0, "FIFO. Send characters: console -> BT\r\n");
+    test_fifo_read(uart_dev_0);
     test_fifo_fill(uart_dev_1, recev_data);
 
-    test_fifo_read(uart_dev_1, "FIFO. Send characters: BT -> console\r\n");
+    test_fifo_fill(uart_dev_1, "FIFO. Send characters: BT -> console\r\n");
+    test_fifo_read(uart_dev_1);
     test_fifo_fill(uart_dev_0, recev_data);
 
-    printk("UART test(s): Done %s\r\n", CONFIG_ARCH);
+    SYS_LOG_DBG("UART_BT TEST DONE");
 
 #ifdef __BEAR_SOC_H_ //Send MSI
     while (!(uart_drv_cmd(uart_dev_0, UART_TX_EMPTY_CMD, 0) && uart_drv_cmd(uart_dev_0, UART_TX_IDLE_CMD, 0))) ;
