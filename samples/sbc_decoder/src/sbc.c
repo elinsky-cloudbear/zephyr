@@ -25,10 +25,11 @@
  *
  */
 
+#include <kernel.h>
 #include <errno.h>
 #include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include <misc/printk.h>
+#include <logging/sys_log.h>
 
 #include "sbc_math.h"
 #include "sbc_tables.h"
@@ -393,7 +394,7 @@ static int sbc_unpack_frame_internal(const uint8_t *data,
 	crc_pos = 16;
 
 	if (frame->mode == JOINT_STEREO) {
-		if (len * 8 < consumed + frame->subbands)
+		if (len * 8 < consumed + frame->subbands) 
 			return -1;
 
 		frame->joint = 0x00;
@@ -408,8 +409,10 @@ static int sbc_unpack_frame_internal(const uint8_t *data,
 		crc_pos += frame->subbands;
 	}
 
-	if (len * 8 < consumed + (4 * frame->subbands * frame->channels))
+	if (len * 8 < consumed + (4 * frame->subbands * frame->channels)) {
+		SYS_LOG_DBG("bad input length");
 		return -1;
+	}
 
 	for (ch = 0; ch < frame->channels; ch++) {
 		for (sb = 0; sb < frame->subbands; sb++) {
@@ -449,8 +452,10 @@ static int sbc_unpack_frame_internal(const uint8_t *data,
 
 				audio_sample = 0;
 				for (bit = 0; bit < bits[ch][sb]; bit++) {
-					if (consumed > len * 8)
+					if (consumed > len * 8) {
+						SYS_LOG_DBG("bad input length");
 						return -1;
+					}
 
 					if ((data[consumed >> 3] >> (7 - (consumed & 0x7))) & 0x01)
 						audio_sample |= 1 << (bits[ch][sb] - bit - 1);
@@ -489,7 +494,7 @@ static int sbc_unpack_frame_internal(const uint8_t *data,
 static int sbc_unpack_frame(const uint8_t *data,
 		struct sbc_frame *frame, size_t len)
 {
-	if (len < 4)
+	if (len < 4) 
 		return -1;
 
 	if (data[0] != SBC_SYNCWORD)
@@ -747,9 +752,11 @@ SBC_EXPORT int sbc_init(sbc_t *sbc, unsigned long flags)
 
 	memset(sbc, 0, sizeof(sbc_t));
 
-	sbc->priv_alloc_base = malloc(sizeof(struct sbc_priv) + SBC_ALIGN_MASK);
-	if (!sbc->priv_alloc_base)
+	sbc->priv_alloc_base = k_malloc(sizeof(struct sbc_priv) + SBC_ALIGN_MASK);
+	if (!sbc->priv_alloc_base) {
+		SYS_LOG_ERR("very bad");
 		return -ENOMEM;
+	}
 
 	sbc->priv = (void *) (((uintptr_t) sbc->priv_alloc_base +
 			SBC_ALIGN_MASK) & ~((uintptr_t) SBC_ALIGN_MASK));
@@ -770,7 +777,7 @@ SBC_EXPORT int sbc_init_msbc(sbc_t *sbc, unsigned long flags)
 
 	memset(sbc, 0, sizeof(sbc_t));
 
-	sbc->priv_alloc_base = malloc(sizeof(struct sbc_priv) + SBC_ALIGN_MASK);
+	sbc->priv_alloc_base = k_malloc(sizeof(struct sbc_priv) + SBC_ALIGN_MASK);
 	if (!sbc->priv_alloc_base)
 		return -ENOMEM;
 
@@ -797,18 +804,23 @@ SBC_EXPORT int sbc_init_msbc(sbc_t *sbc, unsigned long flags)
 SBC_EXPORT ssize_t sbc_decode(sbc_t *sbc, const void *input, size_t input_len,
 			void *output, size_t output_len, size_t *written)
 {
+	//SYS_LOG_DBG("sbc decode begin");
 	struct sbc_priv *priv;
 	char *ptr;
 	int i, ch, framelen, samples;
 
-	if (!sbc || !input)
+	if (!sbc || !input) {
+		SYS_LOG_ERR("EIO error");
 		return -EIO;
+	}
 
 	priv = sbc->priv;
 
 	framelen = priv->unpack_frame(input, &priv->frame, input_len);
+	//SYS_LOG_DBG("framelen %d", framelen);
 
 	if (!priv->init) {
+		//SYS_LOG_DBG("priv->init begin");
 		sbc_decoder_init(&priv->dec_state, &priv->frame);
 		priv->init = true;
 
@@ -822,18 +834,23 @@ SBC_EXPORT ssize_t sbc_decode(sbc_t *sbc, const void *input, size_t input_len,
 		priv->frame.codesize = sbc_get_codesize(sbc);
 		priv->frame.length = framelen;
 	} else if (priv->frame.bitpool != sbc->bitpool) {
+		SYS_LOG_DBG("priv->frame.bitpool != sbc->bitpool begin");
 		priv->frame.length = framelen;
 		sbc->bitpool = priv->frame.bitpool;
 	}
 
-	if (!output)
+	if (!output) {
+		SYS_LOG_DBG("!output return");
 		return framelen;
+	}
 
 	if (written)
 		*written = 0;
 
-	if (framelen <= 0)
+	if (framelen <= 0) {
+		SYS_LOG_DBG("framelen <= 0 return");
 		return framelen;
+	}
 
 	samples = sbc_synthesize_audio(&priv->dec_state, &priv->frame);
 
@@ -842,6 +859,7 @@ SBC_EXPORT ssize_t sbc_decode(sbc_t *sbc, const void *input, size_t input_len,
 	if (output_len < (size_t) (samples * priv->frame.channels * 2))
 		samples = output_len / (priv->frame.channels * 2);
 
+	//SYS_LOG_DBG("cycle samples");
 	for (i = 0; i < samples; i++) {
 		for (ch = 0; ch < priv->frame.channels; ch++) {
 			int16_t s;
@@ -860,6 +878,7 @@ SBC_EXPORT ssize_t sbc_decode(sbc_t *sbc, const void *input, size_t input_len,
 	if (written)
 		*written = samples * priv->frame.channels * 2;
 
+	//SYS_LOG_DBG("sbc decode end");
 	return framelen;
 }
 
@@ -868,7 +887,7 @@ SBC_EXPORT void sbc_finish(sbc_t *sbc)
 	if (!sbc)
 		return;
 
-	free(sbc->priv_alloc_base);
+	k_free(sbc->priv_alloc_base);
 
 	memset(sbc, 0, sizeof(sbc_t));
 }

@@ -22,7 +22,7 @@ config INCLUDE_RESET_VECTOR
 
 config NUM_IRQS
     int
-    default 14  # IRQ #0..11 are reserved according to RISC-V priv spec, IRQ #12 - uart_0; 13 - uart_1
+    default 14  # IRQ #0..11 are reserved according to RISC-V priv spec, IRQ #12 - uart0; 13 - uart1
 
 config RISCV_ROM_BASE_ADDR
     hex

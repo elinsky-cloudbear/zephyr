@@ -441,7 +441,7 @@ static const struct uart_bear_device_config uart_bear_dev_cfg_0 = {
 #endif
 };
 
-DEVICE_AND_API_INIT(uart_bear_0, CONFIG_UART_CONSOLE_ON_DEV_NAME,
+DEVICE_AND_API_INIT(uart_bear_0, CONFIG_UART_BEAR_PORT_0_NAME,
                     uart_bear_init, &uart_bear_dev_data_0,
                     &uart_bear_dev_cfg_0,
                     PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEVICE,

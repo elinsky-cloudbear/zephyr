@@ -174,7 +174,7 @@ void main(void)
     //(*((volatile unsigned int *)(0x10015200))) = 1;
     SYS_LOG_DBG("TEST STARTED");
 
-    struct device *uart_dev_0 = device_get_binding(CONFIG_UART_CONSOLE_ON_DEV_NAME);
+    struct device *uart_dev_0 = device_get_binding(CONFIG_UART_BEAR_PORT_0_NAME);
     struct device *uart_dev_1 = device_get_binding(CONFIG_UART_BEAR_PORT_1_NAME);
 
     test_poll_out(uart_dev_0, "POLL. Send characters: console -> BT\r\n");

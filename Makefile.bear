@@ -1,7 +1,7 @@
 # zephyr-env.sh whick is sourced below requires bash
 SHELL = /bin/bash
 BOARD = board_bear
-SAMPLES = uart_bt_test
+SAMPLES = rw_buffer_test
 
 
 define setup_env
