@@ -1,0 +1,36 @@
+# zephyr-env.sh whick is sourced below requires bash
+SHELL = /bin/bash
+BOARD = board_bear
+SAMPLES = rw_buffer_test
+
+
+define setup_env
+	@export ZEPHYR_TOOLCHAIN_VARIANT=cross-compile \
+			CROSS_COMPILE=/opt/cloudbear/riscv-gnu-toolchain-elf/bin/riscv64-unknown-elf- \
+			LIBGCC_SUBDIR_RISCV=rv32i/ilp32
+	@source zephyr-env.sh
+endef
+
+define build_sample
+PATH_$(1) = samples/$(1)/build
+
+.ONESHELL: build-$(1) 
+build-$(1):
+	$(call setup_env)
+	mkdir $$(PATH_$(1))
+	cmake -DBOARD=$(BOARD) -H$$(PATH_$(1))/.. -B$$(PATH_$(1))
+	make -C $$(PATH_$(1))
+BUILD_SAMPLES += build-$(1)
+
+.ONESHELL: clean-$(1)
+clean-$(1):
+	@rm -rf $$(PATH_$(1))
+CLEAN_SAMPLES += clean-$(1)
+endef
+
+
+$(foreach sample, $(SAMPLES), $(eval $(call build_sample,$(sample))))
+
+build: $(BUILD_SAMPLES)
+
+clean: $(CLEAN_SAMPLES)

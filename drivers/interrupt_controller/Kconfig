@@ -158,6 +158,15 @@ config DW_ICTL_INIT_PRIORITY
 	help
 	  DesignWare Interrupt Controller initialization priority.
 
+config PLIC_BEAR
+    bool "BEAR Platform Level Interrupt Controller (PLIC)"
+    default y
+    depends on SOC_RISCV32_BEAR
+    select RISCV_HAS_PLIC
+    help
+    BEAR Platform Level Interrupt Controller provides support
+    for external interrupts lines defined by the BEAR SOC.
+
 source "drivers/interrupt_controller/Kconfig.stm32"
 
 source "drivers/interrupt_controller/Kconfig.multilevel"

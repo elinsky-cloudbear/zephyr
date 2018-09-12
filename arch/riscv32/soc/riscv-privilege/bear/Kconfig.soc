@@ -1,0 +1,17 @@
+# Kconfig - bear SOC configuration options
+#
+# Copyright (c) 2017 Alexander Kozlov <alexander.kozlov@cloudbear.ru>
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+choice
+prompt "bear SOC implementation"
+depends on SOC_SERIES_RISCV32_BEAR
+
+config SOC_RISCV32_BEAR
+    bool "bear SOC implementation"
+    select ATOMIC_OPERATIONS_C
+    select HAS_BEARSDK
+    select PLIC_BEAR
+endchoice

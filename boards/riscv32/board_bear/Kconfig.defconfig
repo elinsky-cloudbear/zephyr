@@ -1,0 +1,6 @@
+if BOARD_BEAR
+
+config BOARD
+    default "board_bear"
+
+endif
